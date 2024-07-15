@@ -62,3 +62,7 @@ group :development do
 end
 
 gem "devise", "~> 4.9"
+
+gem 'devise_last_seen'
+
+gem "pundit", "~> 2.3"
