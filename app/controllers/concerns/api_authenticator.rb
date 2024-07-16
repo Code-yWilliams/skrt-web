@@ -2,6 +2,11 @@ module ApiAuthenticator
   extend ActiveSupport::Concern
 
   included do
+    include ActionController::HttpAuthentication::Basic::ControllerMethods
+    # include ActionController::HttpAuthentication::Token::ControllerMethods
+    include ActionController::Cookies
+    include Pundit::Authorization
+
     before_action :authenticate_user!
 
     def authenticate_user!
