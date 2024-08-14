@@ -30,6 +30,13 @@ module Api
         render(json: {status: "OK"}, status: :ok)
       end
 
+      # GET /api/v1/authenticate_access_token
+      def authenticate_access_token
+        render(json: {authenticated: true}, status: :ok)
+      end
+
+      private
+
       def validate_password!(user, password)
         raise Api::V1::Errors::LoginFailedError unless user.valid_password?(password)
       end
