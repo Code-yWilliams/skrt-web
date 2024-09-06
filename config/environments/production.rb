@@ -94,4 +94,11 @@ Rails.application.configure do
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  config.action_mailer.delivery_method = :mailgun
+  config.action_mailer.mailgun_settings = {
+    api_key: Rails.application.credentials["mailgun_api_key"],
+    domain: 'moldysandwich.com',
+    # timeout: 20 # Default depends on rest-client, whose default is 60s. Added in 1.2.3.
+  }
 end
