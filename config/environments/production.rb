@@ -96,13 +96,10 @@ Rails.application.configure do
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   config.action_mailer.default_url_options = { :host => "moldysandwich.com" }
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    :authentication => :plain,
-    :address => "smtp.mailgun.org",
-    :port => 587,
-    :domain => "moldysandwich.com",
-    :user_name => "postmaster@moldysandwich.com",
-    :password => config.api_key = Rails.application.credentials["mailgun_smtp_password"]
+  config.action_mailer.delivery_method = :mailgun
+  config.action_mailer.mailgun_settings = {
+    api_key: ENV["MAILGUN_API_KEY"],
+    domain: 'moldysandwich.com',
+    # timeout: 20 # Default depends on rest-client, whose default is 60s. Added in 1.2.3.
   }
 end
