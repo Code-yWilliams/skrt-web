@@ -1,1 +1,2 @@
 1. pull in default mailgun url configs from ENV in config/environments/production.rb and config/environments/development.rb
+2. set up staging
