@@ -70,3 +70,5 @@ gem 'devise_last_seen'
 gem "pundit", "~> 2.3"
 
 gem 'mailgun-ruby', '~>1.2.14'
+
+gem "vite_rails", "~> 3.0"
