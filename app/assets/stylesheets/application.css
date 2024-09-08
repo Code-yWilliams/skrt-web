@@ -17,3 +17,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer components {
+  .link {
+    @apply text-indigo-600 font-light hover:underline hover:font-normal;
+  }
+}
