@@ -21,6 +21,6 @@
       "@app/*": ["app/javascript/app/*"]
     }
   },
-  "include": ["."],
+  "include": ["./**/*.ts", "./**/*.tsx", "./**/*.css"],
   "exclude": ["./node_modules", "./public", "./vendor"]
 }
