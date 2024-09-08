@@ -2,6 +2,10 @@
   <h2 class="text-center mx-auto text-xl font-bold mb-6">Log into your account</h2>
 
 <div class="bg-white rounded-lg p-10 w-full sm:max-w-sm min-w-96 shadow-md shadow-slate-300">
+  <% flash.each do |key, value| %>
+    <div class="border border-1 border-red-500 p-2 mb-2 rounded bg-red-100 text-red-500 alert-<%= key %>"><%= value %></div>
+  <% end %>
+  
   <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "flex flex-col justify-center w-full" }) do |f| %>
       <div class="field flex flex-col justify-center w-full mb-6">
         <%= f.label :email, class: "mb-2" %>
