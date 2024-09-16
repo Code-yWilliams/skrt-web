@@ -31,7 +31,6 @@ const Login = () => {
       // Handle success (e.g., redirect to dashboard)
       window.location.href = "/"; // Or wherever you want to redirect
     } else {
-      console.log("CHEESE");
       console.log(response.status);
       const data = await response.json();
       setError(data.error || "Login failed");
