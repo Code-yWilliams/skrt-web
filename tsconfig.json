@@ -7,18 +7,20 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
     "strictPropertyInitialization": false,
     "paths": {
-      "@app/*": ["app/javascript/app/*"]
+      "@app/*": ["app/javascript/app/*"],
+      "@components/*": ["app/javascript/components/*"]
     }
   },
   "include": ["./**/*.ts", "./**/*.tsx", "./**/*.css"],
