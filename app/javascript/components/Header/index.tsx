@@ -1,6 +1,6 @@
 import { AppShell, Autocomplete, Burger, Group, rem } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
-import classes from "./HeaderSearch.module.css";
+import classes from "./Header.module.css";
 
 const Header = ({
   navBarOpened,
