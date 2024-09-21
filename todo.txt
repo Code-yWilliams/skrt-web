@@ -1,3 +1,7 @@
-1. rescue from mailgun errors. Investigate other gaps in error handling while doing so.
-2. pull in default mailgun url configs from ENV in config/environments/production.rb and config/environments/development.rb
-3. convert auth pages (login, sign up, etc) into react for consistency ()
+- handle non-unique username error (ensure uniqueness on the model before creating)
+- choose and set up a serializer tool
+- send serialized (camelCased) user as initial app component config props
+- rescue from mailgun errors. Investigate other gaps in error handling while doing so.
+- pull in default mailgun url configs from ENV in config/environments/production.rb and config/environments/development.rb
+- convert auth pages (login, sign up, etc) into react for consistency (continue to handle error messages)
+- configure sign in via username
