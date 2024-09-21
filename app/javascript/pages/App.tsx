@@ -14,7 +14,11 @@ declare module "@tanstack/react-router" {
   }
 }
 
-const App = () => {
+type AppConfigProps = {
+  user: IUser;
+};
+
+const App = ({ user }: AppConfigProps) => {
   return (
     <StrictMode>
       <RouterProvider router={router} />
