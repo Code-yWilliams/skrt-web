@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skrt-web-config
+data:
+  # key-value pairs for the application configuration
+  database_url: "postgres://user:password@db.example.com:5432/mydb"
+  RAILS_ENV: "production"

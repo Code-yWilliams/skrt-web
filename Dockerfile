@@ -1,25 +1,95 @@
 # syntax = docker/dockerfile:1
 
+ARG NODE_IMAGE=node:lts-alpine3.20
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
-ARG RUBY_VERSION=3.2.2
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim AS base
+ARG RUBY_VERSION=3.2.2 
+ARG RUBY_IMAGE=registry.docker.com/library/ruby:$RUBY_VERSION-slim
+ARG USER=skrt
+ARG UID=1000
+ARG GID=${UID}
+ARG HOME=/home/${USER}
+ARG BUNDLE_PATH=/usr/local/bundle
 
-# Rails app lives here
-WORKDIR /rails
+# --- NODE IMAGE --- #
+FROM ${NODE_IMAGE} AS node
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+# --- RUBY IMAGE --- #
+FROM ${RUBY_IMAGE} AS base
 
+ARG USER
+ARG UID
+ARG GID
+ARG HOME
+ARG BUNDLE_PATH
 
-# Throw-away build stage to reduce size of final image
-FROM base AS build
+ENV BUNDLE_PATH=${BUNDLE_PATH}
+
+# Create ${USER} User
+RUN addgroup --gid ${GID} ${USER} && \
+    adduser --system -u ${UID} --group ${USER} && \
+    mkdir -p ${HOME} && chown -R ${USER}:${USER} ${HOME} && \
+    mkdir -p ${BUNDLE_PATH} && chown -R ${USER}:${USER} ${BUNDLE_PATH}
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libvips pkg-config
+apt-get install --no-install-recommends -y build-essential git libpq-dev libvips pkg-config
+
+COPY --from=node /usr/lib /usr/lib
+COPY --from=node /usr/local/lib /usr/local/lib
+COPY --from=node /usr/local/include /usr/local/include
+COPY --from=node /usr/local/bin /usr/local/bin
+
+USER ${USER}
+WORKDIR ${HOME}
+
+# Set development environment
+ENV RAILS_ENV="development" \
+    BUNDLE_DEPLOYMENT="1" \
+    BUNDLE_PATH="/usr/local/bundle" 
+    
+# Throw-away build stage to reduce size of final image
+FROM base AS builder-base
+
+ARG USER
+ARG UID
+ARG GID
+ARG HOME
+
+USER root
+
+RUN apt update && apt-get install -y npm
+RUN npm install --global yarn
+
+USER ${USER}
+
+# --- NODEJS BUILDER --- #
+FROM builder-base as builder-node
+
+COPY --chown=${UID}:${GID} package.json yarn.lock .yarnrc.yml ./
+COPY --chown=${UID}:${GID} .yarn .yarn
+
+RUN ls -la
+RUN yarn set version berry
+
+RUN yarn install
+
+  # --- RUBY BUILDER --- #
+
+FROM builder-base as ruby-builder
+
+COPY --chown=${UID}:${GID} Gemfile Gemfile.lock tsconfig* vite.config.ts ./
+
+RUN --mount=type=secret,uid=${UID},id=ACCESS_TOKEN \
+  bundle install
+
+COPY --from=builder-node --chown=${UID}:${GID} ${HOME}/node_modules ${HOME}/node_modules
+
+COPY --chown=${UID}:${GID} . .
+
+# The following is a workaround to prevent node modules and .cache from being copied over to the runtime container.
+# According to this issue, Docker does not provide a method to skip files while copying:
+# https://github.com/moby/buildkit/issues/2853
+RUN rm -rf node_modules .cache
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
@@ -27,36 +97,18 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
-# Copy application code
-COPY . .
+# --- RUNTIME IMAGE --- #
 
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
+FROM base as runner
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+ARG BUNDLE_PATH
+ARG HOME
 
+ENV RAILS_LOG_TO_STDOUT=1
 
-# Final stage for app image
-FROM base
+COPY --from=ruby-builder ${BUNDLE_PATH} ${BUNDLE_PATH}
+COPY --from=ruby-builder ${HOME} ${HOME}
 
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libvips postgresql-client && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy built artifacts: gems, application
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /rails /rails
-
-# Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
-
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-
-# Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD ["./bin/rails", "server"]
+
+CMD ["bin/rails", "server", "-b", "0.0.0.0"]

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skrt-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skrt-web
+  template:
+    metadata:
+      labels:
+        app: skrt-web
+    spec:
+      containers:
+        - name: skrt-web
+          image: skrt-web
+          ports:
+            - containerPort: 3000
