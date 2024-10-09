@@ -9,4 +9,4 @@
 
 
 Notes:
-- mount master key in docker container locally with: docker run -v $(pwd)/config/master.key:/home/skrt/config/master.key -p 3000:3000 skrt-web
+docker run -v $(pwd)/config/master.key:/home/skrt/config/master.key -p 3000:3000 -e DATABASE_HOST=docker.for.mac.host.internal --env-file .env.local skrt-web

@@ -44,7 +44,7 @@ WORKDIR ${HOME}
 
 # Set development environment
 ENV RAILS_ENV="development" \
-    BUNDLE_DEPLOYMENT="1" \
+    # BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" 
     
 # Throw-away build stage to reduce size of final image
@@ -63,7 +63,7 @@ RUN npm install --global yarn
 USER ${USER}
 
 # --- NODEJS BUILDER --- #
-FROM builder-base as builder-node
+FROM builder-base AS builder-node
 
 COPY --chown=${UID}:${GID} package.json yarn.lock .yarnrc.yml ./
 COPY --chown=${UID}:${GID} .yarn .yarn
@@ -75,7 +75,7 @@ RUN yarn install
 
   # --- RUBY BUILDER --- #
 
-FROM builder-base as ruby-builder
+FROM builder-base AS ruby-builder
 
 COPY --chown=${UID}:${GID} Gemfile Gemfile.lock tsconfig* vite.config.ts ./
 
@@ -99,7 +99,7 @@ RUN bundle install && \
 
 # --- RUNTIME IMAGE --- #
 
-FROM base as runner
+FROM base AS runner
 
 ARG BUNDLE_PATH
 ARG HOME
