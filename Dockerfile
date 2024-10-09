@@ -68,34 +68,31 @@ FROM builder-base AS builder-node
 COPY --chown=${UID}:${GID} package.json yarn.lock .yarnrc.yml ./
 COPY --chown=${UID}:${GID} .yarn .yarn
 
-RUN ls -la
 RUN yarn set version berry
 
 RUN yarn install
 
-  # --- RUBY BUILDER --- #
+# --- RUBY BUILDER --- #
 
 FROM builder-base AS ruby-builder
 
 COPY --chown=${UID}:${GID} Gemfile Gemfile.lock tsconfig* vite.config.ts ./
 
-RUN --mount=type=secret,uid=${UID},id=ACCESS_TOKEN \
-  bundle install
+RUN bundle install
 
 COPY --from=builder-node --chown=${UID}:${GID} ${HOME}/node_modules ${HOME}/node_modules
 
 COPY --chown=${UID}:${GID} . .
 
+# Install application gems
+COPY Gemfile Gemfile.lock ./
+RUN bundle install && \
+  bundle exec rake assets:precompile
+
 # The following is a workaround to prevent node modules and .cache from being copied over to the runtime container.
 # According to this issue, Docker does not provide a method to skip files while copying:
 # https://github.com/moby/buildkit/issues/2853
 RUN rm -rf node_modules .cache
-
-# Install application gems
-COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
-    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile --gemfile
 
 # --- RUNTIME IMAGE --- #
 
@@ -111,4 +108,4 @@ COPY --from=ruby-builder ${HOME} ${HOME}
 
 EXPOSE 3000
 
-CMD ["bin/rails", "server", "-b", "0.0.0.0"]
+CMD ["bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
